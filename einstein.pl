@@ -1,36 +1,23 @@
-% Rule 1: a valid row uses each item exactly once
-% Rule 2: a valid column is if no entry is invalid
-% Rule 3: an entry is invalid if there is an explicit mismatch between itself and another element in its column
-% Rule 4: an entry is valid if it is not invalid, or if there is an explicit match between itself and another element in its column
-
-import('game.pl').
-
-solve(Puzzle) :-
-    deconstruct(Puzzle, Rows, Cols),
+solve :-
+    consult('game'),
+    deconstruct(Rows, Cols),
 
     hasValidRows(Rows),
     hasValidColumns(Cols),
 
     printGrid(Rows), !.
 
-deconstruct(Puzzle, Rows, Cols) :-
-    Puzzle = [
-        S11, S12, S13, S14,
-        S21, S22, S23, S24,
-        S31, S32, S33, S34,
-        S41, S42, S43, S44
-        ],
-
-    Row1 = [S11, S12, S13, S14],
-    Row2 = [S21, S22, S23, S24],
-    Row3 = [S31, S32, S33, S34],
-    Row4 = [S41, S42, S43, S44],
+deconstruct(Rows, Cols) :-
+    Row1 = [A1, A2, A3, A4],
+    Row2 = [B1, B2, B3, B4],
+    Row3 = [C1, C2, C3, C4],
+    Row4 = [D1, D2, D3, D4],
     Rows = [Row1, Row2, Row3, Row4],
 
-    Col1 = [S11, S21, S31, S41],
-    Col2 = [S12, S22, S32, S42],
-    Col3 = [S13, S23, S33, S43],
-    Col4 = [S14, S24, S34, S44],
+    Col1 = [A1, B1, C1, D1],
+    Col2 = [A2, B2, C2, D2],
+    Col3 = [A3, B3, C3, D3],
+    Col4 = [A4, B4, C4, D4],
     Cols = [Col1, Col2, Col3, Col4].
 
 getRowOptions([Row1Options, Row2Options, Row3Options, Row4Options]) :-
@@ -70,8 +57,14 @@ validate(X, [Head|Tail]) :-
     validate(X, Tail).
 
 validEntry(X, Y) :- matched(X, Y).
-validEntry(X, Y) :- hasConflictingMatch(X, Y), fail.
 validEntry(X, Y) :- \+ hasConflictingMatch(X, Y), \+ mismatched(X, Y).
+
+% enable bi-directional match / mismatch lookups
+matched(X, Y) :- match(X, Y), !.
+matched(X, Y) :- match(Y, X), !.
+
+mismatched(X, Y) :- mismatch(X, Y).
+mismatched(X, Y) :- mismatch(Y, X).
 
 hasConflictingMatch(X, Y) :-
     sameRow(Y, Z),

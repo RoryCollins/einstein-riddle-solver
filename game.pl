@@ -21,10 +21,3 @@ mismatch(twenty, zeppelin).
 mismatch(santa, twenty).
 mismatch(helicopter, detective).
 mismatch(detective, sunrise).
-
-% enable bi-directional match / mismatch lookups
-matched(X, Y) :- match(X, Y), !.
-matched(X, Y) :- match(Y, X), !.
-
-mismatched(X, Y) :- mismatch(X, Y).
-mismatched(X, Y) :- mismatch(Y, X).
