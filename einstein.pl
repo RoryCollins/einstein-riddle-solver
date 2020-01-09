@@ -5,55 +5,21 @@
 
 import('game.pl').
 
-sameRow(X, Y) :- row(_, Z),
-    member(X, Z),
-    member(Y, Z),
-    \+ (X = Y).
+solve(Puzzle) :-
+    deconstruct(Puzzle, Rows, Cols),
 
-hasConflictingMatch(X, Y) :-
-    sameRow(Y, Z),
-    matched(X, Z), !.
-hasConflictingMatch(X, Y) :-
-    sameRow(X, Z),
-    matched(Y, Z), !.
+    hasValidRows(Rows),
+    hasValidColumns(Cols),
 
-validEntry(X, Y) :- matched(X, Y).
-validEntry(X, Y) :- hasConflictingMatch(X, Y), fail.
-validEntry(X, Y) :- \+ hasConflictingMatch(X, Y), \+ mismatched(X, Y).
+    printGrid(Rows), !.
 
-validate(_, []) :- !.
-validate(X, [Head|Tail]) :-
-    validEntry(X, Head),
-    validate(X, Tail).
-
-validColumn([_|[]]) :- !.
-validColumn([Head|Tail]) :-
-    validate(Head, Tail),
-    validColumn(Tail).
-
-allElementsMatched([], []).
-allElementsMatched([Head|Tail], List2)  :-
-    member(Head, List2),
-    select(Head, List2, Remaining),
-    allElementsMatched(Tail, Remaining).
-
-hasValidRows([], []).
-hasValidRows([CurrentRow|Rows], [CurrentRowOptions|RowOptions]) :-
-    allElementsMatched(CurrentRow, CurrentRowOptions),
-    hasValidRows(Rows, RowOptions).
-
-hasValidColumns([]).
-hasValidColumns([CurrentColumn|Tail]) :-
-    validColumn(CurrentColumn),
-    hasValidColumns(Tail).
-
-solve(Solution) :-
-    Solution = [
-    S11, S12, S13, S14,
-    S21, S22, S23, S24,
-    S31, S32, S33, S34,
-    S41, S42, S43, S44
-    ],
+deconstruct(Puzzle, Rows, Cols) :-
+    Puzzle = [
+        S11, S12, S13, S14,
+        S21, S22, S23, S24,
+        S31, S32, S33, S34,
+        S41, S42, S43, S44
+        ],
 
     Row1 = [S11, S12, S13, S14],
     Row2 = [S21, S22, S23, S24],
@@ -65,12 +31,7 @@ solve(Solution) :-
     Col2 = [S12, S22, S32, S42],
     Col3 = [S13, S23, S33, S43],
     Col4 = [S14, S24, S34, S44],
-    Cols = [Col1, Col2, Col3, Col4],
-
-    getRowOptions(RowOptions),
-    hasValidRows(Rows, RowOptions),
-    hasValidColumns(Cols),
-    printGrid(Rows), !.
+    Cols = [Col1, Col2, Col3, Col4].
 
 getRowOptions([Row1Options, Row2Options, Row3Options, Row4Options]) :-
     row(A, Row1Options),
@@ -78,6 +39,51 @@ getRowOptions([Row1Options, Row2Options, Row3Options, Row4Options]) :-
     row(C, Row3Options),
     row(D, Row4Options),
     fd_all_different([A, B, C, D]).
+
+hasValidRows([], []).
+hasValidRows([CurrentRow|Rows], [CurrentRowOptions|RowOptions]) :-
+    allElementsMatched(CurrentRow, CurrentRowOptions),
+    hasValidRows(Rows, RowOptions).
+hasValidRows(Rows) :-
+    getRowOptions(RowOptions),
+    hasValidRows(Rows, RowOptions).
+
+allElementsMatched([], []).
+allElementsMatched([Head|Tail], List2)  :-
+    member(Head, List2),
+    select(Head, List2, Remaining),
+    allElementsMatched(Tail, Remaining).
+
+hasValidColumns([]).
+hasValidColumns([CurrentColumn|Tail]) :-
+    validColumn(CurrentColumn),
+    hasValidColumns(Tail).
+
+validColumn([_|[]]) :- !.
+validColumn([Head|Tail]) :-
+    validate(Head, Tail),
+    validColumn(Tail).
+
+validate(_, []) :- !.
+validate(X, [Head|Tail]) :-
+    validEntry(X, Head),
+    validate(X, Tail).
+
+validEntry(X, Y) :- matched(X, Y).
+validEntry(X, Y) :- hasConflictingMatch(X, Y), fail.
+validEntry(X, Y) :- \+ hasConflictingMatch(X, Y), \+ mismatched(X, Y).
+
+hasConflictingMatch(X, Y) :-
+    sameRow(Y, Z),
+    matched(X, Z), !.
+hasConflictingMatch(X, Y) :-
+    sameRow(X, Z),
+    matched(Y, Z), !.
+
+sameRow(X, Y) :- row(_, Z),
+    member(X, Z),
+    member(Y, Z),
+    \+ (X = Y).
 
 printGrid([]).
 printGrid([Head|Tail]) :-
