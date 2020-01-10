@@ -5,7 +5,8 @@
 solve :-
     consult('game'),
     deconstruct(Rows, Cols),
-    hasValidRows(Rows),
+    getPuzzle(Puzzle),
+    hasValidRows(Rows, Puzzle),
     hasValidColumns(Cols),
     printGrid(Rows), !.
 
@@ -22,19 +23,16 @@ deconstruct(Rows, Cols) :-
     Col4 = [A4, B4, C4, D4],
     Cols = [Col1, Col2, Col3, Col4].
 
-getRowOptions([Row1Options, Row2Options, Row3Options, Row4Options]) :-
-    row(A, Row1Options),
-    row(B, Row2Options),
-    row(C, Row3Options),
-    row(D, Row4Options),
-    fd_all_different([A, B, C, D]).
+getPuzzle(Puzzle) :-
+    row(1, A),
+    row(2, B),
+    row(3, C),
+    row(4, D),
+    maplist(sort, [A, B, C, D], Puzzle).
 
 hasValidRows([], []).
 hasValidRows([CurrentRow|Rows], [CurrentRowOptions|RowOptions]) :-
     listsEqualIgnoreOrder(CurrentRow, CurrentRowOptions),
-    hasValidRows(Rows, RowOptions).
-hasValidRows(Rows) :-
-    getRowOptions(RowOptions),
     hasValidRows(Rows, RowOptions).
 
 listsEqualIgnoreOrder([], []).
@@ -43,32 +41,28 @@ listsEqualIgnoreOrder([Head|Tail], List2)  :-
     select(Head, List2, Remaining),
     listsEqualIgnoreOrder(Tail, Remaining).
 
-hasValidColumns([]).
-hasValidColumns([CurrentColumn|Tail]) :-
-    allElementsInColumnMatch(CurrentColumn),
-    hasValidColumns(Tail).
+hasValidColumns(List) :- maplist(allElementsInColumnMatch, List).
 
 allElementsInColumnMatch([_|[]]).
 allElementsInColumnMatch([Head|Tail]) :- elementMatchesAll(Head, Tail), allElementsInColumnMatch(Tail).
 
-elementMatchesAll(_, []).
-elementMatchesAll(X, [Head|Tail]) :- elementsMatch(X, Head), elementMatchesAll(X, Tail).
+elementMatchesAll(X, List) :- maplist(elementsMatch(X), List).
 
 elementsMatch(X, Y) :-  \+ mismatched(X, Y), \+ hasConflictingMatch(X, Y).
 
-hasConflictingMatch(X, Y) :- sameRow(Y, Z), matched(X, Z).
-hasConflictingMatch(X, Y) :- sameRow(X, Z), matched(Y, Z).
+hasConflictingMatch(X, Y) :- sameRow(Y, Z), matched(X, Z), !.
+hasConflictingMatch(X, Y) :- sameRow(X, Z), matched(Y, Z), !.
 
 sameRow(X, Y) :- row(_, Z),
     member(X, Z),
     member(Y, Z),
-    \+ (X = Y).
+    \+ (X = Y), !.
 
-matched(X, Y) :- match(X, Y).
-matched(X, Y) :- match(Y, X).
+matched(X, Y) :- match(X, Y), !.
+matched(X, Y) :- match(Y, X), !.
 
-mismatched(X, Y) :- mismatch(X, Y).
-mismatched(X, Y) :- mismatch(Y, X).
+mismatched(X, Y) :- mismatch(X, Y), !.
+mismatched(X, Y) :- mismatch(Y, X), !.
 
 printGrid([]).
 printGrid([Head|Tail]) :-
