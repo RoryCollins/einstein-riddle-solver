@@ -10,4 +10,7 @@ Einstein Riddle a perfect candidate for exploring Prolog
 ## Run
 To run the application, make sure you have prolog installed and start the REPL.
 
-From there, just run execute the following command: `solve.`
+From there, load up the solver with `[einstein].` and execute the following command: `solve.`
+
+## Todo
+Have the solver work for grids of different sizes
