@@ -2,15 +2,23 @@
 %# Rule 2. Elements X and Y must not appear in the same column if the knowledgeBase contains either `mismatch(X, Y).` or `mismatch(Y, X).`
 %# Rule 3. Elements X and Y must appear in the same column if the knowledgeBase contains either `match(X, Y).` or `match(Y, X).`
 
-solve :-
+solveBig(Rows) :-
     consult('game2'),
-    deconstruct(Rows, Cols),
-    getPuzzle(Puzzle),
+    deconstructBig(Rows, Cols),
+    getPuzzleBig(Puzzle),
     hasValidRows(Rows, Puzzle),
     hasValidColumns(Cols),
     printGrid(Rows), !.
 
-deconstruct(Rows, Cols) :-
+solveSmall(Rows) :-
+    consult('game'),
+    deconstructSmall(Rows, Cols),
+    getPuzzleSmall(Puzzle),
+    hasValidRows(Rows, Puzzle),
+    hasValidColumns(Cols),
+    printGrid(Rows), !.
+
+deconstructBig(Rows, Cols) :-
     Row1 = [A1, A2, A3, A4, A5, A6, A7, A8],
     Row2 = [B1, B2, B3, B4, B5, B6, B7, B8],
     Row3 = [C1, C2, C3, C4, C5, C6, C7, C8],
@@ -30,15 +38,33 @@ deconstruct(Rows, Cols) :-
     Col8 = [A8, B8, C8, D8, E8, F8, G8],
     Cols = [Col1, Col2, Col3, Col4, Col5, Col6, Col7, Col8].
 
-getPuzzle(Puzzle) :-
+getPuzzleBig([A, B, C, D, E, F, G]) :-
     row(1, A),
     row(2, B),
     row(3, C),
     row(4, D),
     row(5, E),
     row(6, F),
-    row(7, G),
-    Puzzle = [A, B, C, D, E, F, G].
+    row(7, G).
+
+deconstructSmall(Rows, Cols) :-
+    Row1 = [A1, A2, A3, A4],
+    Row2 = [B1, B2, B3, B4],
+    Row3 = [C1, C2, C3, C4],
+    Row4 = [D1, D2, D3, D4],
+    Rows = [Row1, Row2, Row3, Row4],
+
+    Col1 = [A1, B1, C1, D1],
+    Col2 = [A2, B2, C2, D2],
+    Col3 = [A3, B3, C3, D3],
+    Col4 = [A4, B4, C4, D4],
+    Cols = [Col1, Col2, Col3, Col4].
+
+getPuzzleSmall([A, B, C, D]) :-
+    row(1, A),
+    row(2, B),
+    row(3, C),
+    row(4, D).
 
 hasValidRows([], []) :- !.
 hasValidRows([CurrentRow|Rows], [CurrentRowOptions|RowOptions]) :-
@@ -58,25 +84,35 @@ allElementsInColumnMatch([Head|Tail]) :- elementMatchesAll(Head, Tail), allEleme
 
 elementMatchesAll(X, List) :- maplist(elementsMatch(X), List).
 
-elementsMatch(X, Y) :-  match(X, Y), !.
+elementsMatch(X, Y) :-  matched(X, Y), !.
 elementsMatch(X, Y) :-  \+ mismatched(X, Y), \+ hasConflictingMatch(X, Y).
 
-hasConflictingMatch(X, Y) :- sameRow(Y, Z), matched(X, Z), !.
-hasConflictingMatch(X, Y) :- sameRow(X, Z), matched(Y, Z), !.
+hasConflictingMatch(X, Y) :- sameRow(Y, Z), matched(X, Z).
+hasConflictingMatch(X, Y) :- sameRow(X, Z), matched(Y, Z).
 
 sameRow(X, Y) :- row(_, Z),
     member(X, Z),
     member(Y, Z),
-    \+ (X = Y), !.
+    \+ (X = Y).
 
 matched(X, Y) :- match(X, Y), !.
 matched(X, Y) :- match(Y, X), !.
+matched(X, Y) :- match(X, Z), matched(Y, Z).
 
 mismatched(X, Y) :- mismatch(X, Y), !.
 mismatched(X, Y) :- mismatch(Y, X), !.
+mismatched(X, Y) :- match(X, Z), mismatched(Y, Z).
 
 printGrid([]).
 printGrid([Head|Tail]) :-
     print(Head),
     print('\n'),
     printGrid(Tail).
+
+testSmall :-
+    solveSmall(Rows),
+     Rows = [
+        [twenty,fifty,penny,nickel],
+        [sun,tornadoes,night,sunrise],
+        [helicopter,zeppelin,submarine,ambulance],
+        [crown,wizard,detective,santa]].
